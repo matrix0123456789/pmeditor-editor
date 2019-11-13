@@ -2,7 +2,19 @@
 # yarn lockfile v1
 
 
+fast-creator@^1.0.0:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/fast-creator/-/fast-creator-1.0.1.tgz#2732ab4c0aaaf6cf9429ce350d23b20cfcd39fcd"
+  integrity sha512-sNTD7FW4M/y+2eIC7PmaPcb6oM8KSy1pcoW6yc1dAoQaoX/GFWkpiFp5ANhlxcDFGKIi/fL/Lt9Q5hqfLt34eA==
+
 pmeditor-core@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/pmeditor-core/-/pmeditor-core-0.1.0.tgz#7dc9cc4cbec117edf226219ec56f6763b3cf91b3"
   integrity sha512-rVTeIjOTfVslUSRZf27AsVvK+DZ9QNgzY3vqESSKqfwi+UZesn5lqvqxcpmpxgxM/P7FosJG+7SDb4780KXhpg==
+
+prototype-extensions@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/prototype-extensions/-/prototype-extensions-1.5.0.tgz#01021c0d0a5b783116d7155b5de014bba12fbb19"
+  integrity sha512-v1kzzFrskL26V7CsEzrv+Vyx6mmbyLs3P3fOGpc3oJBAINlY5Z+plYO9Rpncvtc/E/5IC3ifK3Ia2WrsBmDnUA==
+  dependencies:
+    fast-creator "^1.0.0"
