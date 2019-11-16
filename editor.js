@@ -21,7 +21,7 @@ export class Editor {
 
     keyPress(e) {
         console.log(e);
-        this.doc.addText(e.key, this.cursor);
+        this.cursor = this.doc.addText(e.key, this.cursor);
     }
 
     rerender() {
