@@ -1,4 +1,4 @@
-import {BlockAbstract, Document, TextNode} from "pmeditor-core"
+import {BlockAbstract, Document, Paragraph, TextNode} from "pmeditor-core"
 import "./style.scss";
 
 export class Editor {
@@ -16,7 +16,6 @@ export class Editor {
         this.input = document.createElement('input');
         this.html.append(this.input);
         this.html.append(this.docHtml);
-        this.html.onkeypress = this.keyPress.bind(this);
         this.html.onkeydown = this.keyDown.bind(this);
         this.cursorHtml = document.createElement('div');
         this.cursorHtml.classList.add('cursor');
@@ -36,13 +35,13 @@ export class Editor {
         } else if (e.code === "Delete") {
             this.cursor = this.doc.deleteOnceRight(this.cursor);
             this.render();
+        } else if (e.code === "Enter") {
+            this.cursor = this.doc.addBlock(new Paragraph(), this.cursor);
+            this.render();
+        } else if (e.key.length === 1) {
+            this.cursor = this.doc.addText(e.key, this.cursor);
+            this.render();
         }
-    }
-
-    keyPress(e) {
-        console.log(e);
-        this.cursor = this.doc.addText(e.key, this.cursor);
-        this.render();
     }
 
     rerender() {
