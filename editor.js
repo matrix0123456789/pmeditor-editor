@@ -13,6 +13,7 @@ export class Editor {
 
     keyPress(e) {
         console.log(e);
-this.doc.appendText(e.key);
+        this.doc.appendText(e.key);
+
     }
 }
