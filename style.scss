@@ -1,0 +1,46 @@
+.pmeditor {
+    border: 1px red solid;
+    min-height: 100px;
+
+    input {
+        width: 0;
+        height: 0;
+        border: none;
+        padding: 0;
+        position: absolute;
+        z-index: -10;
+    }
+
+    .cursor {
+        display: inline-block;
+        position: absolute;
+        width: 1px;
+        height: 1em;
+        background: black;
+        opacity: 0;
+    }
+
+    &:focus-within {
+        .cursor {
+            animation: cursor-blinking 1s infinite;
+
+            @keyframes cursor-blinking {
+                0% {
+                    opacity: 1
+                }
+                40% {
+                    opacity: 1
+                }
+                50% {
+                    opacity: 0
+                }
+                90% {
+                    opacity: 0
+                }
+                100% {
+                    opacity: 1
+                }
+            }
+        }
+    }
+}
