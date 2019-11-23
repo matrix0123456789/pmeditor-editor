@@ -24,11 +24,17 @@ export class Editor {
 
     keyDown(e) {
         console.log(e);
-        if (e.code == "ArrowLeft") {
+        if (e.code === "ArrowLeft") {
             this.cursor = this.doc.movePointerLeft(this.cursor);
             this.render();
-        } else if (e.code == "ArrowRight") {
+        } else if (e.code === "ArrowRight") {
             this.cursor = this.doc.movePointerRight(this.cursor);
+            this.render();
+        } else if (e.code === "Backspace") {
+            this.cursor = this.doc.deleteOnce(this.cursor);
+            this.render();
+        } else if (e.code === "Delete") {
+            this.cursor = this.doc.deleteOnceRight(this.cursor);
             this.render();
         }
     }
