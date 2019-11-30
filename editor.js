@@ -54,7 +54,13 @@ export class Editor {
             this.cursor = this.doc.addBlock(new Paragraph(), this.cursor);
             this.render();
         } else if (e.key.length === 1) {
-            this.cursor = this.doc.addText(e.key, this.cursor);
+            if (e.ctrlKey) {
+                if (e.key === "a") {
+                    this.selectionCursor = [];
+                    this.cursor = this.doc.getEndPointer();
+                }
+            } else
+                this.cursor = this.doc.addText(e.key, this.cursor);
             this.render();
         }
     }
@@ -124,13 +130,17 @@ export class Editor {
     }
 
     copy(e) {
-        e.clipboardData.setData('text/abc', '111');
-        e.clipboardData.setData('text/html', '<b>11</b>b>1');
+        if (this.selectionCursor != null) {
+            const fragment = this.doc.getFragment(this.selectionCursor, this.cursor);
+            e.clipboardData.setData('text/pmeditor', fragment.serialize());
+            e.clipboardData.setData('text/plain', fragment.toText());
+        }
         e.preventDefault();
     }
 
     paste(e) {
+        let pastePMEditor = e.clipboardData.getData('text/pmeditor');
         let paste = e.clipboardData.getData('text');
-        console.log(paste);
+        console.log(pastePMEditor, paste);
     }
 }
