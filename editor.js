@@ -6,7 +6,7 @@ export class Editor {
         if (!doc)
             doc = new Document();
         this.doc = doc;
-        doc.contentChanged(() => this.render());
+        this.doc.contentChanged(() => this.render());
         this.cursor = doc.getEndPointer();
         this.selectionCursor = null;
         this.html = document.createElement('div');
@@ -17,16 +17,31 @@ export class Editor {
         this.html.append(this.input);
         this.html.append(this.docHtml);
         this.html.onkeydown = this.keyDown.bind(this);
+        this.html.oncopy = this.copy.bind(this);
+        this.html.onpaste = this.paste.bind(this);
         this.cursorHtml = document.createElement('div');
         this.cursorHtml.classList.add('cursor');
+        this.selectionCursorHtml = document.createElement('div');
+        this.selectionCursorHtml.classList.add('cursor');
     }
 
     keyDown(e) {
-        console.log(e);
         if (e.code === "ArrowLeft") {
+            if (e.shiftKey) {
+                if (!this.selectionCursor)
+                    this.selectionCursor = this.cursor;
+            } else {
+                this.selectionCursor = null;
+            }
             this.cursor = this.doc.movePointerLeft(this.cursor);
             this.render();
         } else if (e.code === "ArrowRight") {
+            if (e.shiftKey) {
+                if (!this.selectionCursor)
+                    this.selectionCursor = this.cursor;
+            } else {
+                this.selectionCursor = null;
+            }
             this.cursor = this.doc.movePointerRight(this.cursor);
             this.render();
         } else if (e.code === "Backspace") {
@@ -50,10 +65,10 @@ export class Editor {
 
     render() {
         let next = this.doc.content.map(x => this.renderElement(x));
-        this.replaceChildrens(this.docHtml, next);
+        this.replaceChildren(this.docHtml, next);
     }
 
-    replaceChildrens(element, next) {
+    replaceChildren(element, next) {
         let current = Array.from(element.childNodes);
         for (let x of next) {
             element.append(x)
@@ -72,29 +87,50 @@ export class Editor {
             contentArray.forEach(x => html.append(x));
             element.contentChanged(() => {
                 let contentArray = this.renderBlockContent(element.content);
-                this.replaceChildrens(html, contentArray);
+                this.replaceChildren(html, contentArray);
             });
             return html;
         }
     }
 
     renderBlockContent(contentArray) {
+        let cursors = [{path: this.cursor, element: this.cursorHtml}];
+        if (this.selectionCursor)
+            cursors.push({path: this.selectionCursor, element: this.selectionCursorHtml});
+
         let ret = [];
         for (let element of contentArray) {
             if (element instanceof TextNode) {
-                const cursorNode = this.cursor[this.cursor.length - 2];
-                if (cursorNode == element) {
-                    const cursorOffset = this.cursor[this.cursor.length - 1] || 0;
-                    ret.push(document.createTextNode(element.content.substr(0, cursorOffset + 1)))
-                    ret.push(this.cursorHtml);
-                    ret.push(document.createTextNode(element.content.substr(cursorOffset + 1)))
-
-                } else {
-                    ret.push(document.createTextNode(element.content))
-
+                let part = "";
+                for (let i = 0; i <= element.content.length; i++) {
+                    for (const cursor of cursors) {
+                        const cursorNode = cursor.path[this.cursor.length - 2];
+                        const cursorOffset = cursor.path[this.cursor.length - 1] || 0;
+                        if (cursorNode === element && cursorOffset === i) {
+                            if (part.length > 0)
+                                ret.push(document.createTextNode(part));
+                            part = '';
+                            ret.push(cursor.element);
+                        }
+                    }
+                    if (i < element.content.length)
+                        part += element.content[i];
                 }
+                if (part.length > 0)
+                    ret.push(document.createTextNode(part));
             }
         }
         return ret;
+    }
+
+    copy(e) {
+        e.clipboardData.setData('text/abc', '111');
+        e.clipboardData.setData('text/html', '<b>11</b>b>1');
+        e.preventDefault();
+    }
+
+    paste(e) {
+        let paste = e.clipboardData.getData('text');
+        console.log(paste);
     }
 }
