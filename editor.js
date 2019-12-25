@@ -1,4 +1,4 @@
-import {BlockAbstract, Document, Paragraph, TextNode} from "pmeditor-core"
+import {BlockAbstract, Document, Paragraph, ParseText, ParseXmlString, TextNode} from "pmeditor-core"
 import "./style.scss";
 
 export class Editor {
@@ -140,7 +140,17 @@ export class Editor {
 
     paste(e) {
         let pastePMEditor = e.clipboardData.getData('text/pmeditor');
-        let paste = e.clipboardData.getData('text');
-        console.log(pastePMEditor, paste);
+        let pasteText = e.clipboardData.getData('text');
+        let parsed;
+        if (pastePMEditor) {
+            parsed = ParseXmlString(pastePMEditor);
+        } else if (pasteText) {
+            parsed = ParseText(pasteText);
+        }
+        if (parsed) {
+            this.cursor = this.doc.addSubdocument(parsed, this.cursor)
+            console.log(pastePMEditor, this.doc.serialize());
+            this.render();
+        }
     }
 }
