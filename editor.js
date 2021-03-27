@@ -12,18 +12,17 @@ export class Editor {
         this.html = document.createElement('div');
         this.html.tabIndex = 1;
         this.html.classList.add('pmeditor')
-        // this.html.onclick = () => this.input.focus();
         this.docHtml = document.createElement('div');
-        // this.input = document.createElement('input');
-        // this.html.append(this.input);
         this.html.append(this.docHtml);
         this.html.onkeydown = this.keyDown.bind(this);
         this.html.oncopy = this.copy.bind(this);
         this.html.onpaste = this.paste.bind(this);
         this.cursorHtml = document.createElement('div');
         this.cursorHtml.classList.add('cursor');
+        this.cursorHtml.classList.add('normalCursor');
         this.selectionCursorHtml = document.createElement('div');
         this.selectionCursorHtml.classList.add('cursor');
+        this.selectionCursorHtml.classList.add('selectionCursor');
 
         document.addEventListener('selectionchange', this.selectionchange.bind(this));
     }
@@ -78,7 +77,19 @@ export class Editor {
         this.replaceChildren(this.docHtml, next);
 
         let selection = document.getSelection();
-        selection.setPosition(this.docHtml.querySelector('.cursor'))
+        let cursorHtml = this.docHtml.querySelector('.normalCursor');
+        let selectionCursorHtml = this.docHtml.querySelector('.selectionCursor');
+        if (cursorHtml && selectionCursorHtml) {
+            var range = document.createRange();
+            range.setStart(selectionCursorHtml, 0);
+            range.setEnd(cursorHtml, 0);
+            var range2 = document.createRange();
+            range2.setStart(cursorHtml, 0);
+            range2.setEnd(selectionCursorHtml, 0);
+            selection.removeAllRanges()
+            //selection.setPosition(selectionCursorHtml)
+            selection.addRange(range.collapsed ? range2 : range)
+        }
     }
 
     replaceChildren(element, next) {
@@ -174,23 +185,29 @@ export class Editor {
 
     selectionchange() {
         let selection = document.getSelection();
-        let nexCursor = this.selectionToCursor(selection);
-        if (nexCursor.length) {
-            this.cursor = nexCursor
+        let {anchorNode, anchorOffset} = selection;
+        let nextCursor = this.nodeToPath(selection.anchorNode, selection.anchorOffset);
+        let nextSelectionCursor = this.nodeToPath(selection.focusNode, selection.focusOffset);
+        if (nextCursor.length || nextSelectionCursor.length) {
+            console.log([selection, this.cursor, nextCursor, this.selectionCursor, nextSelectionCursor])
+            if (nextCursor.length) {
+                this.cursor = nextCursor
+            }
+            if (nextSelectionCursor.length) {
+                this.selectionCursor = nextSelectionCursor;
+            }
             this.render();
         }
     }
 
-    selectionToCursor(selection) {
-        let {anchorNode, anchorOffset} = selection;
+    nodeToPath(node, offset) {
         let ret = [];
-        let node = anchorNode;
-        if (node == this.cursorHtml)
+        if (node == this.cursorHtml || node == this.selectionCursorHtml)
             return [];
         while (node && node.parentNode) {
             if (node.pmeditorNode) {
                 if (node.pmeditorNode instanceof TextNode)
-                    ret = [node.pmeditorNode, anchorOffset + (node.pmeditorNodeOffset || 0)];
+                    ret = [node.pmeditorNode, offset + (node.pmeditorNodeOffset || 0)];
                 else
                     ret = [node.pmeditorNode, ...ret];
             }

@@ -18,6 +18,10 @@
         height: 1em;
         background: black;
         opacity: 0;
+
+        &.normalCursor {
+            background: red;
+        }
     }
 
     &:focus-within {
