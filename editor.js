@@ -10,11 +10,12 @@ export class Editor {
         this.cursor = doc.getEndPointer();
         this.selectionCursor = null;
         this.html = document.createElement('div');
+        this.html.tabIndex = 1;
         this.html.classList.add('pmeditor')
-        this.html.onclick = () => this.input.focus();
+        // this.html.onclick = () => this.input.focus();
         this.docHtml = document.createElement('div');
-        this.input = document.createElement('input');
-        this.html.append(this.input);
+        // this.input = document.createElement('input');
+        // this.html.append(this.input);
         this.html.append(this.docHtml);
         this.html.onkeydown = this.keyDown.bind(this);
         this.html.oncopy = this.copy.bind(this);
@@ -23,9 +24,12 @@ export class Editor {
         this.cursorHtml.classList.add('cursor');
         this.selectionCursorHtml = document.createElement('div');
         this.selectionCursorHtml.classList.add('cursor');
+
+        document.addEventListener('selectionchange', this.selectionchange.bind(this));
     }
 
     keyDown(e) {
+        console.log(e);
         if (e.code === "ArrowLeft") {
             if (e.shiftKey) {
                 if (!this.selectionCursor)
@@ -72,6 +76,9 @@ export class Editor {
     render() {
         let next = this.doc.content.map(x => this.renderElement(x));
         this.replaceChildren(this.docHtml, next);
+
+        let selection = document.getSelection();
+        selection.setPosition(this.docHtml.querySelector('.cursor'))
     }
 
     replaceChildren(element, next) {
@@ -89,6 +96,7 @@ export class Editor {
     renderElement(element) {
         if (element instanceof BlockAbstract) {
             let html = document.createElement('div');
+            html.pmeditorNode = element;
             let contentArray = this.renderBlockContent(element.content);
             contentArray.forEach(x => html.append(x));
             element.contentChanged(() => {
@@ -108,22 +116,32 @@ export class Editor {
         for (let element of contentArray) {
             if (element instanceof TextNode) {
                 let part = "";
+                let offsetUsed = 0;
                 for (let i = 0; i <= element.content.length; i++) {
                     for (const cursor of cursors) {
                         const cursorNode = cursor.path[this.cursor.length - 2];
                         const cursorOffset = cursor.path[this.cursor.length - 1] || 0;
                         if (cursorNode === element && cursorOffset === i) {
-                            if (part.length > 0)
-                                ret.push(document.createTextNode(part));
+                            if (part.length > 0) {
+                                let node = document.createTextNode(part);
+                                node.pmeditorNode = element;
+                                node.pmeditorNodeOffset = offsetUsed;
+                                ret.push(node);
+                            }
                             part = '';
+                            offsetUsed = i;
                             ret.push(cursor.element);
                         }
                     }
                     if (i < element.content.length)
                         part += element.content[i];
                 }
-                if (part.length > 0)
-                    ret.push(document.createTextNode(part));
+                if (part.length > 0) {
+                    let node = document.createTextNode(part);
+                    node.pmeditorNode = element;
+                    node.pmeditorNodeOffset = offsetUsed;
+                    ret.push(node);
+                }
             }
         }
         return ret;
@@ -152,5 +170,32 @@ export class Editor {
             console.log(pastePMEditor, this.doc.serialize());
             this.render();
         }
+    }
+
+    selectionchange() {
+        let selection = document.getSelection();
+        let nexCursor = this.selectionToCursor(selection);
+        if (nexCursor.length) {
+            this.cursor = nexCursor
+            this.render();
+        }
+    }
+
+    selectionToCursor(selection) {
+        let {anchorNode, anchorOffset} = selection;
+        let ret = [];
+        let node = anchorNode;
+        if (node == this.cursorHtml)
+            return [];
+        while (node && node.parentNode) {
+            if (node.pmeditorNode) {
+                if (node.pmeditorNode instanceof TextNode)
+                    ret = [node.pmeditorNode, anchorOffset + (node.pmeditorNodeOffset || 0)];
+                else
+                    ret = [node.pmeditorNode, ...ret];
+            }
+            node = node.parentNode;
+        }
+        return ret;
     }
 }
